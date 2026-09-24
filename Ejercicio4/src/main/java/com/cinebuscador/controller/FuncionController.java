@@ -17,12 +17,10 @@ import java.util.stream.Collectors;
 public class FuncionController {
 
     private final FuncionRepository funcionRepo;
-    private final SpelEvaluator spelEval;
 
     @Autowired
-    public FuncionController(FuncionRepository funcionRepo, SpelEvaluator spelEval) {
+    public FuncionController(FuncionRepository funcionRepo) {
         this.funcionRepo = funcionRepo;
-        this.spelEval = spelEval;
     }
 
     @GetMapping("/")
@@ -39,21 +37,22 @@ public class FuncionController {
             return "index";
         }
 
-        String spelResultado = spelEval.evaluate(buscar);
+        // String spelResultado = spelEval.evaluate(buscar);
 
-        model.addAttribute("spelOutput", spelResultado);
-
-        if (!spelResultado.isBlank()) {
-            List<Funcion> resultados = funcionRepo.findAll().stream()
+        List<Funcion> resultados = funcionRepo.findAll().stream()
                 .filter(f -> f.getNombreFuncion() != null &&
-                             f.getNombreFuncion().toLowerCase().contains(spelResultado.toLowerCase()))
+                    f.getNombreFuncion().toLowerCase().contains(buscar.toLowerCase()))
                 .collect(Collectors.toList());
-            model.addAttribute("resultados", resultados);
-            model.addAttribute("mensaje", "Resultados buscando por: " + spelResultado);
-        } else {
+        
+        model.addAttribute("resultados", resultados);
+
+        if (resultados.isEmpty()) {
             model.addAttribute("resultados", new ArrayList<Funcion>());
             model.addAttribute("mensaje", "No se encontraron coincidencias.");
+            return "index";
         }
+
+        model.addAttribute("mensaje", "Resultados buscando por: " + buscar);
 
         return "index";
     }

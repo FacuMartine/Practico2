@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import java.util.UUID;
+
 @Controller
 public class PeliculaController {
 
@@ -85,8 +87,29 @@ public class PeliculaController {
         Pelicula pelicula = peliculaRepo.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Pelicula no encontrada"));
 
-        String filename = archivo.getOriginalFilename();
+        String nombreOriginal = archivo.getOriginalFilename();
+
+        //Verificamos que el archivo tenga alguna extension.
+        if (nombreOriginal == null || !nombreOriginal.contains(".")) {
+            return "redirect:/upload/" + id;
+        }
+
+        //Obtenemos la extension del archivo para luego comparar que correctamente sea los archivos deseados.
+        int i = nombreOriginal.lastIndexOf('.');
+        String extension = nombreOriginal
+            .substring(i + 1)
+            .toLowerCase();
+
+        if (!List.of("png", "jpg", "jpeg").contains(extension)) {
+            return "redirect:/upload/" + id;
+        }
+
+        //Creamo sun UUID aleatorio para almacenar el afiche
+        String uuidAleatorio = UUID.randomUUID().toString();
+        String filename = uuidAleatorio + "." + extension;
+
         Path uploadPath = Paths.get(uploadDir);
+
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
         }

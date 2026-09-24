@@ -20,16 +20,25 @@ def close_db(exception):
         db.close()
 
 
-def buscar_funciones(query, sort_by='nombre', sort_dir='ASC'):
+def buscar_funciones(query, sort_by, sort_dir='ASC'):
+
+    if sort_by == 'fecha':
+        sort_by = 'funciones.fecha_hora'
+    else:
+        sort_by = 'peliculas.nombre'
+
+    sort_dir=sort_dir.upper()
+    if sort_dir not in ('ASC', 'DESC'):
+        sort_dir = 'ASC'
+
     db = get_db()
     sql = f"SELECT peliculas.nombre as pelicula, funciones.fecha_hora, " \
           f"(funciones.asientos_totales - funciones.asientos_ocupados) as disponibles " \
           f"FROM funciones " \
           f"JOIN peliculas ON funciones.pelicula_id = peliculas.id " \
-          f"WHERE peliculas.nombre LIKE '%{query}%' " \
-          f"ORDER BY {'peliculas.nombre' if sort_by == 'nombre' else 'funciones.fecha_hora'} " \
-          f"{sort_dir}"
-    return db.execute(sql).fetchall()
+          f"WHERE peliculas.nombre LIKE ? " \
+          f"ORDER BY {sort_by} {sort_dir}"
+    return db.execute(sql, (f"%{query}%",)).fetchall()
 
 
 @app.route('/')
