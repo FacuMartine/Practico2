@@ -32,12 +32,12 @@ public class AuthController {
         User user = userRepository.findByUsername(username).orElse(null);
 
         if (user != null) {
-            // Descifrar la contraseña almacenada y comparar con la ingresada
-            String decryptedPassword = EncryptionService.decrypt(user.getPassword());
-            if (password.equals(decryptedPassword)) {
+            // Comparar la contraseña ingresada con el hash almacenado
+            String userHashedPassword = user.getPassword();
+
+            if (EncryptionService.verifyPassword(password, userHashedPassword)) {
                 model.addAttribute("loginSuccess", true);
                 model.addAttribute("welcomeUser", username);
-                model.addAttribute("encryptedPassword", user.getPassword());
                 return "index";
             }
         }
@@ -65,12 +65,11 @@ public class AuthController {
 
         com.cinebuscador.model.User nuevoUsuario = new com.cinebuscador.model.User();
         nuevoUsuario.setUsername(username);
-        nuevoUsuario.setPassword(EncryptionService.encrypt(password));
+        nuevoUsuario.setPassword(EncryptionService.hashPassword(password));
         userRepository.save(nuevoUsuario);
 
         model.addAttribute("registerSuccess", true);
         model.addAttribute("registeredUsername", username);
-        model.addAttribute("encryptedPassword", EncryptionService.encrypt(password));
         addForms(model);
         return "index";
     }
